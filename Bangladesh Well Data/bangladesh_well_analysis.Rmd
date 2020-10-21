@@ -1,0 +1,182 @@
+---
+title: "Bangladesh Well Data Analysis"
+author: "Soohyun"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(reshape)
+```
+
+## Practicum 2
+
+*Question 1*
+
+```{r, echo=FALSE}
+wells <- readRDS("wellsdata.RDS") #omit don't know or not??
+wells$Region <- as.factor(wells$Region)
+wells$Switch <- as.integer(wells$Switch == TRUE)
+
+```
+
+a) Does arsenic poisoning contribute to impoverishment by increasing the amount spent on healthcare?
+
+```{r, echo=FALSE}
+#omit unknown status households
+health.df <- subset(wells, Status <= 1, select = c(Status, pct_hhinc_healthcare, Region))
+
+#subset by safe and unsafe wells
+unsafe <- subset(wells, Status == 0, select = c(Status, pct_hhinc_healthcare, Region, Switch, Ed, Nearest))
+safe <- subset(wells, Status == 1, select = c(Status, pct_hhinc_healthcare, Region, Switch, Ed))
+
+#create a new dataframe of two groups
+health <- c(mean(unsafe$pct_hhinc_healthcare), mean(safe$pct_hhinc_healthcare))
+status <- c("Unsafe","Safe")
+status.df <- data.frame(status, health)
+
+ggplot(data = status.df, aes(x = status, y = health, fill = status)) + geom_col(width = 0.4) + ylim(0,0.25) + theme_bw() + labs(title = "Percent of Income on Healthcare by Well Status", x = "Well Status", y = "Percent of Income on Healthcare")
+
+```
+
+The percentage of household income spent on healthcare does not change much, regardless of the well's status. The difference between the two groups is less than 0.0001 percent (thus very small), and the average percentage of income on healthcare neither increases nor decreases on a notable level. 
+
+This has different possible scenarios - it can be that unsafe water does not apply as a factor that leads to people raising health spendings. For Bangladeshis in these regions, increasing health expenditures might require much more immediate incidents and health conditions. In addition, even if one's health is worsened by arsenic levels, this may not necessarily lead to higher spending due to various reasons, such as lack of access to medical infrastructures (to spend money on), and households prioritizing other elements like food and housing which lowers emphasis on healthcare.
+
+So we cannot conclude that impoverishment is intensified through higher arsenic levels in water; rather, it is more reasonable to suggest that unsafe well usage would not lead to increase in health expenditure, and subsequent impoverishment from it.
+
+
+b) Does this effect vary by region?
+
+```{r, echo=FALSE}
+#sort out by regions
+region1 <- wells[which(wells$Region == "Region 1"),]
+region2 <- wells[which(wells$Region == "Region 2"),]
+region3 <- wells[which(wells$Region == "Region 3"),]
+
+#average healthcare costs by region & well status
+unsafe1 <- mean(region1[which(region1$Status == 0),]$pct_hhinc_healthcare)
+unsafe2 <- mean(region2[which(region2$Status == 0),]$pct_hhinc_healthcare)
+unsafe3 <- mean(region3[which(region3$Status == 0),]$pct_hhinc_healthcare)
+
+safe1 <- mean(region1[which(region1$Status == 1),]$pct_hhinc_healthcare)
+safe2 <- mean(region2[which(region2$Status == 1),]$pct_hhinc_healthcare)
+safe3 <- mean(region3[which(region3$Status == 1),]$pct_hhinc_healthcare)
+
+#create separate dataframe
+regions <- c("Region 1", "Region 2", "Region 3")
+health.1 <- c(unsafe1,unsafe2,unsafe3)
+health.2 <- c(safe1, safe2, safe3)
+region.df <- data.frame(regions, health.1, health.2)
+region.df2 <- melt(region.df, id.vars = 'regions')
+
+  
+ggplot(data = region.df2, aes(x = regions, y = value, fill = variable)) + geom_col(stat = 'identity', position = 'dodge', width = 0.4) + theme_bw() + labs(title = "Average Percent of Income on Healthcare, by region", x = NULL, y ="Percent of Income on Healthcare") + scale_fill_discrete(name = "Status", labels = c("Unsafe","Safe"))
+
+
+```
+
+We know that spending on healthcare does not vary by well status, but we still want to see if there are differences in this among the three regions.
+
+Looking at the well status - healthcare expenditure relationship by region, we can conclude that regional differences do exist. According to the graph, Region 1 has a higher average expense on healthcare than the other two.
+
+However, in policy design aspect, the most crucial point to keep in mind is whether a move to 'safe' status will actually bring down healthcare expenditures. This is the important element to consider when deciding where to target for maximized impact.
+
+In this case, Region 1 is not the optimal option because there is hardly any difference in health spending between safe and unsafe groups (it even appears to increase). Among all three, the NGO should target Region 2 to maximize impact of well improvement efforts, since Region 2 shows the greatest drop in health expenditures after moving to safe status.
+
+
+*Question 2*
+
+We want to see what factors may affect switching behaviour - in this case, education has been used to test if it alters resulting action. As we want to specifically examine households with arsenic in their wells, I sorted out a group with 'unsafe' arsenic levels.
+
+a) Does education impact well switching?
+
+```{r, echo = FALSE}
+ggplot(data = unsafe, aes(x = Ed, y = Switch)) + geom_smooth(method = "glm", method.args = list(family = "binomial")) + ylim(0,1) + labs(title = "Effect of Education on Switching Action", x = "Years of Education", y = "Probability of Switching Unsafe Wells") + theme_bw()
+
+```
+
+Education greatly affects the the switching behavior of households with unsafe wells. As the graph clearly shows, the higher the years of education received, the more likely for a household to switch from unsafe wells. In fact, those who receive around 15 years of education are twice more likely to change to a safe well, compared to those who had no formal educatino. Switching is a sign that the people are aware of harmful effects arsenic level poses, and higher education would imply that people are more knowledgeable of health impacts for high arsenic levels.
+
+While raising general education level is a long-term issue that requires more comprehensive policies and infrastructures, the goal of increasing switching behaviour can be achieved by targeting health-specific educational sessions on a more regular basis. Cases of NGOs conducting health awareness programs in villages have been implemented before (ex. waterborne disease prevention, sexual education training), and this can be applied in Bangladesh as well, specifically with focus on well safety and health impact.
+
+
+b) Does well location (distance) impact well switching?
+
+```{r, echo = FALSE}
+
+ggplot(data = unsafe, aes(x = Nearest, y = Switch)) + geom_smooth(method = "glm", method.args = list(family = "binomial")) + ylim(0,1) + labs(title = "Effect of Distance of Nearest Available Well on Switching Action", x = "Distance of Nearest Well (by meters)", y = "Probability of Switching Unsafe Wells") + theme_bw()
+
+```
+
+Feasible accessibility to alternative wells is another crucial factor that affects switching behaviour. The graph above demonstrates that the greater the distance to the nearest alternate well, the lower the probability of switching. In fact, if the distance exceeds 300 meters, people are hardly ever going to change the wells they use.
+
+In all, people are less likely to change the wells if they are farther away, even if it means continuing usage of toxic water.
+
+The best solution would be to build more wells, so that they will be more easily accessible to a wider community. However, simple planning more construction is not feasible. Considering there are two kinds of wells, it would benefit more people with less costs to focus on building more community wells that would serve a wider village community. 
+
+
+## Appendix
+
+One of the holes in this data that could potentially impact subsequent interpretations was its rather large group of 'Don't Know' respondents for well status. According to the table below, 2800 answered they don't know whether their well is safe or not. Omitting such a large NA data and proceeding with interpretations of the available ones seemed to be overlooking important part, so that was one reservation I had.
+
+```{r}
+table(wells$Status)
+```
+
+In order to test if arsenic poisoning in wells (measured by status notation of 'unsafe' and 'safe') increased the amount of spending on healthcare, I ran a linear regression of Status and percentage of income spent on healthcare.
+
+```{r}
+health.lm <- lm(pct_hhinc_healthcare ~ Status, data = health.df)
+summary(health.lm)
+
+```
+The result showed that there was very small difference (and even that minor difference meant that 'safe' households spent more than 'unsafe' ones), and thus this was not significant enough to conclude that there is a change in healthcare expenditures between different groups.
+
+
+I also wanted to check if this effect varied across regions. To see the regional differences, I added variable 'Region' as an interaction term and ran the regression again.
+
+```{r}
+region.h <- lm(pct_hhinc_healthcare ~ Status + Region + Status*Region, data = health.df)
+summary(region.h)
+```
+While status alone does not really impact the healthcare expenditures, there were meaningful variations across the regions. Adding region as an interaction term, we could see that general level of healthcare spending was the highest in Region 1 (Region 1 > Region 2 > Region 3).
+
+However, our focus in designing policy should not be on which region has a nominally higher healthcare expenditure. We should examine whether moving to 'safe' status (coded as 1) will lower the percent of income on health expenditure. The summary of the logistic regression shows that only for Region 2 and 3 expenditures actually decrease by a statistically signifcant level. Changing to safe wells will lower down health expenditures in Region 2 the most (by -0.0018). Thus targeting Region 2 households to change to safe wells will maximize positive impact. 
+
+```{r}
+ggplot(data = health.df, aes(x = Status, y = pct_hhinc_healthcare, colour = Region)) + geom_smooth(method = "lm") + labs(title = "Effect of Status on Healthcare Spending, by region", y = "Percent of Income on Healthcare") + theme_bw()
+       
+```
+
+In terms of visualizing, the initial logistic regression plot was the easiest to plot, but the message was not straightforward since 'unsafe' and 'safe' were coded as integers of 0 and 1. So I decided to use bar graphs with unsafe and safe sections per region, for more direct delivery.
+
+
+*Question 2*
+
+Education was used as a variable in logistic regression for measuring probability of switching behaviour. Since we want to test this hypothesis only within the group with unsafe wells, I pulled out a separate 'unsafe' group and ran the regression among them.
+
+```{r}
+
+switch.ed <- glm(Switch ~ Ed, data = unsafe, family = binomial(link = "logit"), na.action = na.exclude)
+summary(switch.ed)
+
+```
+
+The logistic regression clearly shows that education levels significantly impact the switching behaviour - for a year increase in education, the probability of the household switching away from unsafe wells increase by 0.21. Thus we can conclude that education is an important determinant of switching behaviour.
+
+
+Another factor that I hypothesized would have affected switching behaviour was the distance of the nearest other well. I assumed that the greater the distance, the less likely that the household will change well despite having a high arsenic level. This was again tested with logistic regression.
+
+```{r}
+
+switch.dist <- glm(Switch ~ Nearest, data = unsafe, family = binomial(link = "logit"), na.action = na.exclude)
+summary(switch.dist)
+
+```
+
+The logistic regression indeed showed that nearest distance results in significant changes of the switching probability. For every meter increase in nearest alternate well, the probability of switching decreases by 0.027. 
+
