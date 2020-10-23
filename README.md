@@ -1,7 +1,7 @@
 # Soohyun_Portfolio
 Soohyun Hwangbo's Compilation of Projects &amp; Works
 
-## California Employment Discrimination (2020 May - July) (R - tidyverse, ggmap, sf)
+## [California Employment Discrimination (2020 Summer)](https://github.com/sh4733/Soohyun_Portfolio/tree/main/Cali_Employment_Discrimination)
 
 Language Used: R
 
@@ -19,14 +19,17 @@ I worked as a summer research fellow for a sociology project that examined the i
 Most of my time was focused on cleaning and processing the address data of the filed companies, to identify their geographic locations and convert them into geographic locations
 
 
-
-I also created a new data set of census-tract level socioeconomic variables from 
+I also created a new data set of census-tract level socioeconomic variables from S
 
 
 ## Twitter Sentiment Analysis of JUUL-related Tweets (R)
 
 Language Used: R
 
-## 
+## [Bangladesh Well Data Analysis for Policy Suggestion (2018 Fall)](https://github.com/sh4733/Soohyun_Portfolio/tree/main/Bangladesh%20Well%20Data)
 
+This was part of Data Analysis coursework project, and I analyzed 50000+ Bangladesh well data survey results to identify effect of household income and education levels on well-switching behavior.
 
+Using ggplot, I created basic visualizations of the descriptive statistics: 
+![alt text](https://github.com/sh4733/Soohyun_Portfolio/blob/main/images/well_data_1.png)
+![alt text](https://github.com/sh4733/Soohyun_Portfolio/blob/main/images/well_data_2.png)
